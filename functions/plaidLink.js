@@ -28,14 +28,12 @@ module.exports.addBankAndAccounts = async (publicToken, institutionId) => {
     console.log(`Querying info about institution ${institutionId}`)
     const bankInfo = await plaidClient.getInstitutionById(institutionId)
     console.log(util.inspect(bankInfo))
-    const bankName = bankInfo.institution.name
-    const bankLogo = bankInfo.institution.logo
-    const bankPrimaryColor = bankInfo.institution.primary_color
 
     const accounts = await plaidClient.getAccounts(bankAccessToken);
     console.info("Success getting accounts from Plaid");
     console.log(util.inspect(accounts))
-    return firebase.storeBankAndAccounts(bankId, bankName, bankLogo, bankPrimaryColor, bankAccessToken, accounts.accounts);
+    return firebase.storeBankAndAccounts(bankId, bankInfo.institution.name, bankInfo.institution.logo,
+        bankInfo.institution.primary_color, bankAccessToken, accounts.accounts);
 }
 
 module.exports.pullNewTransactions = async (bankId) => {
@@ -71,10 +69,8 @@ module.exports.updateBankBalances = async (bankId, accessToken) => {
     const results = []
 
     const bankBalances = await plaid.getBalance(accessToken)
-    var totalBankBalance = 0.0
     for (account of bankBalances.accounts) {
-        totalBankBalance += account.balances.current
-        results.push(firebase.updateAccountBalance(bankId, account.account_id, account.balances.current))
+        results.push(firebase.updateBankAccountBalance(bankId, account))
     }
 
     results.push(firebase.updateBankTotalBalance(bankId, totalBankBalance))

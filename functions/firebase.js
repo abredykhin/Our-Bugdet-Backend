@@ -25,16 +25,11 @@ module.exports.storeBankAndAccounts = async (bankId, bankName, bankLogo, bankPim
     await bankRef.set(bankInfo);
 
     let accountsRef = bankRef.collection('accounts');
-    var bankTotalBalance = 0.0
 
     const results = []
     for (const acc of accounts) {
-        acc.balance = acc.balances.current
         results.push(accountsRef.add(acc));
-        bankTotalBalance += acc.balances.current
     }
-
-    results.push(this.updateBankTotalBalance(bankId, bankTotalBalance))
 
     return Promise.all(results);
 }
@@ -68,6 +63,14 @@ module.exports.storeTransactions = async (bankId, transactions) => {
     return Promise.all(results);
 }
 
+module.exports.updateBankAccountBalances = async (bankId, account) => {
+    console.log(`Storing balances in accounts for bank ${bankId} in database`)
+
+    const accountRef = admin.firestore.collection('banks').doc(`${bankId}`).collection('accounts').doc(`${account}`)
+    return accountRef.update({
+        balances: account.balances
+    })
+}
 /**
 module.exports.getTransactions = async (bankId) => {
     console.log(`Querying all transactions in ${itemId}`);
@@ -84,23 +87,29 @@ module.exports.getBank = async (bankId) => {
     return admin.firestore().collection('banks').doc(bankId).get()
 }
 
-module.exports.updateBankTotalBalance = async (bankId, balance) => {
-    console.log(`Updating total bank ${bankId} balance to ${balance}`)
-    const balanceRef = admin.firestore().collection('banks').doc(`${bankId}`)
+//  TODO: are these needed?
+/*
+module.exports.messageTotalBalance = async (bankId) => {
+    console.log(`Sending message to topic Balance regarding bank ${bankId}`)
 
-    return balanceRef.update({
-        totalBalance: balance
-    })
-}
-
-module.exports.updateAccountBalance = async (bankId, accountId, accountType, balance) => {
-    console.log(`Updating account ${accountId} (bank ${bankId}) balance to ${balance}`)
-
-    if (accountType === 'loan' || accountType === 'credit') {
-        balance = -balance
+    const message = {
+        data: {
+            bankId: bankId
+        },
+        topic: 'balance'
     }
-    const accountRef = admin.firestore().collection('banks').doc(`${bankId}`).collection('accounts').doc(`${accountId}`)
-    return accountRef.update({
-        balance: balance
-    })
+
+    return admin.messaging().send(message)
 }
+
+module.exports.messageNewTransactions = async (bankId) => {
+    console.log(`Sending message to topic Transaction regarding bank ${bankId}`)
+
+    const message = {
+        data: {
+            bankId: bankId
+        },
+        topic: 'transactions'
+    }
+}
+*/
