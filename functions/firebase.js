@@ -71,45 +71,30 @@ module.exports.updateBankAccountBalances = async (bankId, account) => {
         balances: account.balances
     })
 }
-/**
-module.exports.getTransactions = async (bankId) => {
-    console.log(`Querying all transactions in ${itemId}`);
-    const snapshot = await admin.firestore().collection('/items').doc(itemId).collection('transactions');
-    const transactions = [];
-    snapshot.forEach(doc => {
-        transactions.push(doc.data());
-    })
-    return transactions;
+
+module.exports.createBudget = async (name, income, expenses) => {
+    console.log(`Storing ${name} budget in database`)
+
+    const monthly = income - expenses
+    const weekly = (income - expenses) / 4.0
+    const daily = (income - expenses) / 30.0
+
+    const results = []
+
+    results.add(admin.firestore.collection('budgets').doc(`${name}`).delete())
+
+    results.add(admin.firestore.collection('budgets').doc(`${name}`).set({
+        name: name,
+        income: income,
+        expenses: expenses,
+        daily_limit: daily,
+        weekly_limit: weekly,
+        monthly_limit: monthly
+    }))
+
+    return Promise.all(results)
 }
- */
 
 module.exports.getBank = async (bankId) => {
     return admin.firestore().collection('banks').doc(bankId).get()
 }
-
-//  TODO: are these needed?
-/*
-module.exports.messageTotalBalance = async (bankId) => {
-    console.log(`Sending message to topic Balance regarding bank ${bankId}`)
-
-    const message = {
-        data: {
-            bankId: bankId
-        },
-        topic: 'balance'
-    }
-
-    return admin.messaging().send(message)
-}
-
-module.exports.messageNewTransactions = async (bankId) => {
-    console.log(`Sending message to topic Transaction regarding bank ${bankId}`)
-
-    const message = {
-        data: {
-            bankId: bankId
-        },
-        topic: 'transactions'
-    }
-}
-*/

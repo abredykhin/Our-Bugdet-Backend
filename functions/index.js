@@ -44,3 +44,17 @@ exports.pullAccountTransactions = functions.https.onRequest(async (req, res) => 
 
     res.status(200).send();
 })
+
+exports.createMainBudget = functions.https.onCall(async (data, context) => {
+    console.info("Creating main budget");
+    console.info(data);
+
+    const monthlyIncome = data.monthly_income
+    const monthlyRequiredExpenses = data.monthly_required_expenses
+
+    await firebase.createBudget("main", monthlyIncome, monthlyRequiredExpenses)
+
+    return {
+        status: "OK"
+    }
+})
