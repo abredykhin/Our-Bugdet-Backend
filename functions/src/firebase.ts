@@ -1,13 +1,13 @@
 'use strict';
 
-const moment = require('moment')
-const util = require('util')
+import moment = require('moment')
+import util = require('util')
 
 // The Firebase Admin SDK to access the Firebase Realtime Database.
 const admin = require('firebase-admin')
 admin.initializeApp({ credential: admin.credential.applicationDefault() })
 
-module.exports.storeBankAndAccounts = async (bankId, bankName, bankLogo, bankPimaryColor, accessToken, accounts) => {
+export async function storeBankAndAccounts(bankId, bankName, bankLogo, bankPimaryColor, accessToken, accounts) {
     console.log(`Adding new bank ${bankId} and its ${accounts.length} accounts`)
     const bankRef = admin.firestore().collection('banks').doc(`${bankId}`);
 
@@ -24,7 +24,7 @@ module.exports.storeBankAndAccounts = async (bankId, bankName, bankLogo, bankPim
 
     await bankRef.set(bankInfo);
 
-    let accountsRef = bankRef.collection('accounts');
+    const accountsRef = bankRef.collection('accounts');
 
     const results = []
     for (const acc of accounts) {
@@ -34,7 +34,7 @@ module.exports.storeBankAndAccounts = async (bankId, bankName, bankLogo, bankPim
     return Promise.all(results);
 }
 
-module.exports.removeTransactions = async (bankId, transactions) => {
+export async function removeTransactions(bankId, transactions) {
     console.log(`Removing ${transactions.length} transactions from bank ${bankId}`)
 
     const transactionsCollection = admin.firestore().collection('banks').doc(bankId).collection('transactions');
@@ -47,10 +47,10 @@ module.exports.removeTransactions = async (bankId, transactions) => {
     return Promise.all(results);
 }
 
-module.exports.storeTransactions = async (bankId, transactions) => {
+export async function storeTransactions(bankId, transactions) {
     console.log(`Storing transactions for bank ${bankId} in database`)
     const now = moment().unix();
-    const bankRef = admin.firestore().collection('banks').doc(itemId)
+    const bankRef = admin.firestore().collection('banks').doc(bankId)
     const transactionsRef = bankRef.collection('transactions');
 
     const results = []
@@ -63,7 +63,7 @@ module.exports.storeTransactions = async (bankId, transactions) => {
     return Promise.all(results);
 }
 
-module.exports.updateBankAccountBalances = async (bankId, account) => {
+export async function updateBankAccountBalances(bankId, account) {
     console.log(`Storing balances in accounts for bank ${bankId} in database`)
 
     const accountRef = admin.firestore.collection('banks').doc(`${bankId}`).collection('accounts').doc(`${account}`)
@@ -72,7 +72,7 @@ module.exports.updateBankAccountBalances = async (bankId, account) => {
     })
 }
 
-module.exports.createBudget = async (name, income, expenses) => {
+export async function createBudget(name, income, expenses) {
     console.log(`Storing ${name} budget in database`)
 
     const monthly = income - expenses
@@ -95,6 +95,6 @@ module.exports.createBudget = async (name, income, expenses) => {
     return Promise.all(results)
 }
 
-module.exports.getBank = async (bankId) => {
+export async function getBank(bankId) {
     return admin.firestore().collection('banks').doc(bankId).get()
 }

@@ -1,25 +1,24 @@
 'use strict';
 
-const plaid = require('plaid')
-const firebase = require('./firebase')
-const util = require('util')
-const moment = require('moment')
+import plaid = require('plaid')
+import firebase = require('./firebase')
+import util = require('util')
+import moment = require('moment')
 
-const PLAID_ENV = "sandbox"
+const PLAID_ENV = plaid.environments.sandbox // TODO: change to prod
 const PLAID_CLIENT_ID = "5cfea7d083a3230012cc3b9d"
 const PLAID_PUBLIC_KEY = "c97bb2a089e4c7935133a0c96043ef"
 const PLAID_SECRET = "b9376414937a1160da8e954f6307c8" // sandbox
 //const PLAID_SECRET = "6364bf5effaef128107827bb389c67" // dev
 
-var plaidClient = new plaid.Client(
+const plaidClient = new plaid.Client(
     PLAID_CLIENT_ID,
     PLAID_SECRET,
     PLAID_PUBLIC_KEY,
-    plaid.environments[PLAID_ENV],
-    { version: '2019-05-29', clientApp: 'OurBudget' }
+    plaid.environments[PLAID_ENV]
 );
 
-module.exports.addBankAndAccounts = async (publicToken, institutionId) => {
+export async function addBankAndAccounts(publicToken: string, institutionId: string) {
     console.log(`Adding new bank and its accounts`)
     const bankAccess = await plaidClient.exchangePublicToken(publicToken);
     const bankAccessToken = bankAccess.access_token;
@@ -36,7 +35,7 @@ module.exports.addBankAndAccounts = async (publicToken, institutionId) => {
         bankInfo.institution.primary_color, bankAccessToken, accounts.accounts);
 }
 
-module.exports.pullNewTransactions = async (bankId) => {
+export async function pullNewTransactions(bankId: string) {
     console.log(`Pulling transactions for bank ${bankId}`)
     const bankRef = await firebase.getBank(bankId)
     const bank = bankRef.data()
@@ -65,12 +64,12 @@ module.exports.pullNewTransactions = async (bankId) => {
     return Promise.all(results)
 }
 
-module.exports.updateBankBalances = async (bankId, accessToken) => {
+export async function updateBankBalances(bankId: string, accessToken: string) {
     const results = []
 
-    const bankBalances = await plaid.getBalance(accessToken)
-    for (account of bankBalances.accounts) {
-        results.push(firebase.updateBankAccountBalance(bankId, account))
+    const bankBalances = await plaidClient.getBalance(accessToken);
+    for (const account of bankBalances.accounts) {
+        results.push(firebase.updateBankAccountBalances(bankId, account))
     }
 
     results.push(firebase.updateBankTotalBalance(bankId, totalBankBalance))
